@@ -2,6 +2,7 @@ package com.jonathanyk.chainfusion.service;
 
 import com.jonathanyk.chainfusion.dto.ProductRequest;
 import com.jonathanyk.chainfusion.dto.ProductResponse;
+import com.jonathanyk.chainfusion.exception.ResourceNotFoundException;
 import com.jonathanyk.chainfusion.model.Product;
 import com.jonathanyk.chainfusion.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -10,11 +11,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class ProductService {
+public class ProductService implements IProductService {
 
     private final ProductRepository productRepository;
 
@@ -32,6 +34,15 @@ public class ProductService {
     public List<ProductResponse> getAllProducts() {
         List<Product> allProducts = productRepository.findAll();
         return allProducts.stream().map(product -> mapToProductResponse(product)).toList();
+    }
+    @Override
+    public ProductResponse getProductById(String productId) {
+        Optional<Product> desiredProduct = Optional.ofNullable(
+                productRepository.findById(productId).orElseThrow(() ->
+                        new ResourceNotFoundException("Product not found with id: " + productId)));
+
+        return mapToProductResponse(desiredProduct.get());
+
     }
 
     private ProductResponse mapToProductResponse(Product product) {
