@@ -20,7 +20,7 @@ public class ProductService implements IProductService {
 
     private final ProductRepository productRepository;
 
-    public void createProduct(ProductRequest productRequest) {
+    public String createProduct(ProductRequest productRequest) {
         Product product = Product.builder()
                 .name(productRequest.getName())
                 .description(productRequest.getDescription())
@@ -28,7 +28,10 @@ public class ProductService implements IProductService {
                 .build();
 
         productRepository.save(product);
-        log.info("product id: {} saved", product.getId());
+
+        String retString = String.format("product saved, its id: %s", product.getId());
+        log.info(retString);
+        return retString;
     }
 
     public List<ProductResponse> getAllProducts() {
