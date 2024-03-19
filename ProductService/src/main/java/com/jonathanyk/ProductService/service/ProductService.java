@@ -2,7 +2,7 @@ package com.jonathanyk.ProductService.service;
 
 import com.jonathanyk.ProductService.dto.ProductRequest;
 import com.jonathanyk.ProductService.dto.ProductResponse;
-import com.jonathanyk.ProductService.exception.ResourceNotFoundException;
+import com.jonathanyk.chainCommons.exception.ResourceNotFoundException;
 import com.jonathanyk.ProductService.model.Product;
 import com.jonathanyk.ProductService.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -39,12 +39,10 @@ public class ProductService implements IProductService {
     }
     @Override
     public ProductResponse getProductById(String productId) {
-        Optional<Product> desiredProduct = Optional.ofNullable(
-                productRepository.findById(productId).orElseThrow(() ->
-                        new ResourceNotFoundException("Product not found with id: " + productId)));
+        Optional<Product> desiredProduct = productRepository.findById(productId);
 
-        return mapToProductResponse(desiredProduct.get());
-
+        return desiredProduct.map(this::mapToProductResponse).orElseThrow( () ->
+                new ResourceNotFoundException("Product not found with id: " + productId));
     }
 
     private ProductResponse mapToProductResponse(Product product) {
