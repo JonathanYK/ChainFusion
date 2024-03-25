@@ -6,10 +6,12 @@ import com.jonathanyk.OrderService.model.Order;
 import com.jonathanyk.OrderService.model.OrderItems;
 import com.jonathanyk.OrderService.repository.OrderRepository;
 import com.jonathanyk.chainCommons.exception.ResourceNotFoundException;
+import com.jonathanyk.chainCommons.inventoryCommons.InventoryStockResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
+import org.springframework.web.reactive.function.client.WebClient;
+import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,6 +21,12 @@ import java.util.UUID;
 public class OrderService {
 
     private final OrderRepository orderRepository;
+
+    private final WebClient webClient;
+
+    //todo: export to env vars
+    private final String INVENTORY_SERVICE_URL = "http://localhost:8082/api/inventory";
+
 
     public String placeOrder(OrderRequest orderRequest) {
         if (orderRequest.getOrderItemsDtoList() == null) {
@@ -35,7 +43,29 @@ public class OrderService {
 
         order.setOrderItemsList(orderItems);
 
-        orderRepository.save(order);
+        List<String> currOrderSkuCodes = order.getOrderItemsList().stream().map(
+                orderItem -> orderItem.getSkuCode()).toList();
+
+        // place order only if all products in stock
+        InventoryStockResponse[] inventoryStockResponseArray = webClient.get()
+                .uri(INVENTORY_SERVICE_URL,
+                        uriBuilder -> uriBuilder.queryParam("skuCodes",
+                                order.getOrderItemsList().stream().map(orderItem -> orderItem.getSkuCode()).toList())
+                                .build())
+                .retrieve()
+                .bodyToMono(InventoryStockResponse[].class)
+                .block();
+
+        assert inventoryStockResponseArray != null;
+        if (inventoryStockResponseArray.length != 0) {
+            return "Following products are not in stock: " + Arrays.stream(inventoryStockResponseArray)
+                    .filter(inventoryStockResponse -> !inventoryStockResponse.getIsInStock())
+                    .map(inventoryStockResponse -> inventoryStockResponse.getSkuCode())
+                    .toList();
+        } else {
+            orderRepository.save(order);
+        }
+
         StringBuilder successMsg = new StringBuilder();
         for (OrderItems orderItemsOfSavedOrder : order.getOrderItemsList()) {
             successMsg.append("order with sku code: ")

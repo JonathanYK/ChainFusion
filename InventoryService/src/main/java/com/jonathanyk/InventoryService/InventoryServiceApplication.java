@@ -17,7 +17,7 @@ public class InventoryServiceApplication {
 		SpringApplication.run(InventoryServiceApplication.class, args);
 	}
 
-
+	// init db data
 	@Bean
 	public CommandLineRunner loadData(InventoryRepository inventoryRepository) {
 		return args -> {
