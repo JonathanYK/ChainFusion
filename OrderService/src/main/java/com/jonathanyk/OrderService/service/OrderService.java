@@ -57,7 +57,9 @@ public class OrderService {
                 .block();
 
         assert inventoryStockResponseArray != null;
-        if (inventoryStockResponseArray.length != 0) {
+        if (inventoryStockResponseArray.length != 0 && !Arrays.stream(inventoryStockResponseArray)
+                        .filter(inventoryStockResponse -> !inventoryStockResponse.getIsInStock()).toList().isEmpty()) {
+
             return "Following products are not in stock: " + Arrays.stream(inventoryStockResponseArray)
                     .filter(inventoryStockResponse -> !inventoryStockResponse.getIsInStock())
                     .map(inventoryStockResponse -> inventoryStockResponse.getSkuCode())
