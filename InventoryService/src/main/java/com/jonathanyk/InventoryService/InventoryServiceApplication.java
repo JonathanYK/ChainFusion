@@ -15,6 +15,9 @@ public class InventoryServiceApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(InventoryServiceApplication.class, args);
+		log.info("******************************");
+		log.info("*** inventory service is up ***");
+		log.info("******************************");
 	}
 
 	// init db data
